@@ -1,5 +1,5 @@
 import TurndownService from "turndown";
-import { ContentType, ScrapedNote, ScrapedPost } from "./ScrapeEngine.js";
+import { ContentType, ScrapedNote, ScrapedTag, ScrapedPost } from "./ScrapeEngine.js";
 
 // https://github.com/sindresorhus/video-extensions/blob/main/video-extensions.json
 export const videoExtensions = [
@@ -205,4 +205,40 @@ export function parseResolutionString(str: string | undefined | null): [number, 
   } else {
     console.log(`[parseResolutionString] Couldn't parse resolution from '${str}'.`);
   }
+}
+
+function getTags(taggingServerURL: string, imageUrl: string): Promise<string[]> {
+  const uploadUrl = `${taggingServerURL}/upload-from-url/`;
+  const formData = new FormData();
+  formData.append("url", imageUrl);
+
+  return fetch(uploadUrl, {
+    method: "POST",
+    body: formData,
+  })
+    .then(async (response) => {
+      if (response.ok) {
+        const data = await response.json();
+        console.log("Predictions:", data);
+        return data["tags"];
+      } else {
+        const errorText = await response.text();
+        console.error("Error:", errorText);
+        return [];
+      }
+    })
+    .catch((error) => {
+      console.error("Error:", error.message);
+      return [];
+    });
+}
+
+export async function addUniqueTags(taggingServerURL: string, post: ScrapedPost): Promise<ScrapedPost> {
+  const tags = await getTags(taggingServerURL, post.contentUrl);
+  const existingTags = new Set(post.tags.map(t => t.name))
+  for (const t of tags) {
+    if (existingTags.has(t)) continue;
+    post.tags.push(new ScrapedTag(t, "character"))
+  }
+  return post
 }

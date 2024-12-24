@@ -1,4 +1,5 @@
-import { ScrapeEngineBase, ScrapeResult, ScrapedPost, ScrapeEngineFeature } from "../ScrapeEngine.js";
+import { TaggingScrapeEngineBase, ScrapeResult, ScrapedPost, ScrapeEngineFeature } from "../ScrapeEngine.js";
+import { addUniqueTags } from "../Utility.js";
 
 export function getOriginalImageUrl(image: HTMLImageElement) {
   // if the link includes a resolution, change it to orig:
@@ -11,7 +12,7 @@ export function getOriginalImageUrl(image: HTMLImageElement) {
   return img_url;
 }
 
-export default class Twitter extends ScrapeEngineBase {
+export default class Twitter extends TaggingScrapeEngineBase {
   name = "twitter";
   features: ScrapeEngineFeature[] = ["content"];
   notes = [];
@@ -26,17 +27,24 @@ export default class Twitter extends ScrapeEngineBase {
       const post = new ScrapedPost();
       post.pageUrl = document.location.href;
       post.contentUrl = getOriginalImageUrl(center_img as HTMLImageElement).href;
-      result.tryAddPost(post);
+      const promisedPost = addUniqueTags(this.taggingServerURL, post);
+      result.tryAddPromisedPost(promisedPost);
     }
 
     // look for images within a tweet:
     const imgs = [...document.querySelectorAll("article a[role='link'] div[data-testid='tweetPhoto'] img")];
 
-    for (const img of imgs) {
+    for(let i = 0; i < imgs.length; i++) {
+      const img = imgs[i];
       const post = new ScrapedPost();
       post.pageUrl = document.location.href;
       post.contentUrl = getOriginalImageUrl(img as HTMLImageElement).href;
-      result.tryAddPost(post);
+      if(i < 2) {
+        const promisedPost = addUniqueTags(this.taggingServerURL, post);
+        result.tryAddPromisedPost(promisedPost);
+      } else {
+        result.tryAddPost(post);
+      }
     }
 
     return result;

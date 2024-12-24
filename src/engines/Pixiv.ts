@@ -1,5 +1,5 @@
-import { ScrapeEngineBase, ScrapeResult, ScrapedPost, ScrapeEngineFeature } from "../ScrapeEngine.js";
-import { guessContentType } from "../Utility.js";
+import { TaggingScrapeEngineBase, ScrapeResult, ScrapedPost, ScrapeEngineFeature } from "../ScrapeEngine.js";
+import { guessContentType, addUniqueTags } from "../Utility.js";
 
 export function upgradeUrlToOriginalQuality(imgLink: string) {
   if (imgLink.indexOf("img-master") != -1) {
@@ -21,7 +21,7 @@ export function upgradeUrlToOriginalQuality(imgLink: string) {
   return imgLink;
 }
 
-export default class Pixiv extends ScrapeEngineBase {
+export default class Pixiv extends TaggingScrapeEngineBase {
   name = "pixiv";
   features: ScrapeEngineFeature[] = ["content"];
   notes = [];
@@ -69,7 +69,8 @@ export default class Pixiv extends ScrapeEngineBase {
       post.contentUrl = upgradeUrlToOriginalQuality(imgLink);
       post.contentType = guessContentType(post.contentUrl);
       post.referrer = document.location.origin;
-      result.tryAddPost(post);
+      const promisedPost = addUniqueTags(this.taggingServerURL, post);
+      result.tryAddPromisedPost(promisedPost);
     }
 
     return result;

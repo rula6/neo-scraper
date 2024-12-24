@@ -1,14 +1,14 @@
 {
   "compilerOptions": {
     "lib": [
-      "ES2019",
+      "ESNext",
       "DOM",
       "DOM.Iterable"
     ],
     "outDir": "./dist/",
     "sourceMap": true,
     "strict": true,
-    "module": "ES2020",
+    "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "target": "ES2020",
     "skipLibCheck": true,

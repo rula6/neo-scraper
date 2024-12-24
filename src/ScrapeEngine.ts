@@ -39,6 +39,7 @@ export class ScrapeResult {
   engine: string;
   description = "";
   posts: ScrapedPost[] = [];
+  promisedPosts: Promise<ScrapedPost>[] = [];
 
   constructor(engine: string) {
     this.engine = engine;
@@ -51,10 +52,26 @@ export class ScrapeResult {
       this.posts.push(post);
     }
   }
+
+  tryAddPromisedPost(post: Promise<ScrapedPost>) {
+    this.promisedPosts.push(post)
+  }
+
+  async awaitPromisedPosts() {
+    for await (const post of this.promisedPosts) {
+      this.tryAddPost(post)
+    }
+  }
 }
 
 export class ScrapeResults {
   results: ScrapeResult[] = [];
+
+  async awaitAllResults() {
+    for(let r of this.results) {
+      await r.awaitPromisedPosts()
+    }
+  }
 
   get posts(): ScrapedPost[] {
     let posts: ScrapedPost[] = [];
@@ -102,5 +119,15 @@ export abstract class ScrapeEngineBase implements ScrapeEngine {
 
   protected log(str: string) {
     console.log(`[${this.name}] ${str}`);
+  }
+}
+
+
+export abstract class TaggingScrapeEngineBase extends ScrapeEngineBase {
+  taggingServerURL: string;
+
+  constructor (taggingServerURL: string) {
+    super()
+    this.taggingServerURL = taggingServerURL
   }
 }

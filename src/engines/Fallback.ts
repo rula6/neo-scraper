@@ -1,5 +1,5 @@
-import { ScrapeEngineBase, ScrapeResult, ScrapedPost, ContentType, ScrapeEngineFeature } from "../ScrapeEngine.js";
-import { guessContentType } from "../Utility.js";
+import { TaggingScrapeEngineBase, ScrapeResult, ScrapedPost, ContentType, ScrapeEngineFeature } from "../ScrapeEngine.js";
+import { guessContentType, addUniqueTags } from "../Utility.js";
 
 class MediaElement {
   constructor(
@@ -9,7 +9,7 @@ class MediaElement {
   ) { }
 }
 
-export default class Fallback extends ScrapeEngineBase {
+export default class Fallback extends TaggingScrapeEngineBase {
   name = "fallback";
   features: ScrapeEngineFeature[] = ["content"];
   notes = ["Tries to find the largest image or video on the current page."];
@@ -27,7 +27,8 @@ export default class Fallback extends ScrapeEngineBase {
       post.pageUrl = document.location.href;
       post.contentUrl = document.location.href;
       post.contentType = "video";
-      result.tryAddPost(post);
+      const promisedPost = addUniqueTags(this.taggingServerURL, post);
+      result.tryAddPromisedPost(promisedPost);
       return result;
     }
 
@@ -48,18 +49,22 @@ export default class Fallback extends ScrapeEngineBase {
       a?.size > b?.size ? a : b
     );
 
+    console.log(this.taggingServerURL)
+
     if (largestMediaElement) {
       const post = new ScrapedPost();
       post.name = "Upload as URL";
       post.pageUrl = document.location.href;
       post.contentUrl = largestMediaElement.contentUrl;
       post.contentType = largestMediaElement.contentType;
-      result.tryAddPost(post);
+      const promisedPost = addUniqueTags(this.taggingServerURL, post);
+      result.tryAddPromisedPost(promisedPost);
 
       const clone = Object.assign({}, post);
       clone.name = "Upload as content";
       clone.uploadMode = "content";
-      result.tryAddPost(clone);
+      const promisedClone = addUniqueTags(this.taggingServerURL, post);
+      result.tryAddPromisedPost(promisedClone);
     }
 
     return result;

@@ -5,7 +5,7 @@ export default class NeoScraper {
   engines: ScrapeEngine[] = [];
   fallbackEngine: ScrapeEngine | null = null;
 
-  constructor(useDefaultEngines = true) {
+  constructor(taggingServerURL: string, useDefaultEngines = true) {
     if (useDefaultEngines) {
       this.engines.push(
         new engines.AnimePictures(),
@@ -18,16 +18,16 @@ export default class NeoScraper {
         new engines.Moebooru(),
         new engines.Nozomi(),
         new engines.Philomena(),
-        new engines.Pixiv(),
+        new engines.Pixiv(taggingServerURL),
         new engines.Reddit(),
         new engines.Rule34us(),
         new engines.SankakuComplex(),
         new engines.Shimmie2(),
         new engines.Shuushuu(),
-        new engines.Twitter(),
+        new engines.Twitter(taggingServerURL),
         new engines.Zerochan()
       );
-      this.fallbackEngine = new engines.Fallback();
+      this.fallbackEngine = new engines.Fallback(taggingServerURL);
     }
   }
 
