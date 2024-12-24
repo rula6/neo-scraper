@@ -49,8 +49,6 @@ export default class Fallback extends TaggingScrapeEngineBase {
       a?.size > b?.size ? a : b
     );
 
-    console.log(this.taggingServerURL)
-
     if (largestMediaElement) {
       const post = new ScrapedPost();
       post.name = "Upload as URL";
